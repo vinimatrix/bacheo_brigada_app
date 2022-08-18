@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "14137688900",
+    "project_id": "bacheo-brigada",
+    "storage_bucket": "bacheo-brigada.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:14137688900:android:fa8c0e591f9139fcd90d11",
+        "android_client_info": {
+          "package_name": "com.oowltechnology.bacheo_brigada"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "14137688900-uva8icuojn6dmneeim097u05f261ho5v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADzuJd3N2r6SfJuVWz383SwTuJovjXyvg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "14137688900-uva8icuojn6dmneeim097u05f261ho5v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
