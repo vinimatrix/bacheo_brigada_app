@@ -6,11 +6,14 @@ import 'package:bacheo_brigada/providers/globals.dart';
 import 'package:bacheo_brigada/screens/gretings.dart';
 import 'package:bacheo_brigada/screens/login.dart';
 import 'package:bacheo_brigada/services/http_service.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:location/location.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../constants/google.dart';
 
 class AppStateProvider extends ChangeNotifier {
   double lat = 0.0;
@@ -24,9 +27,9 @@ class AppStateProvider extends ChangeNotifier {
   late String _referencia;
   late String _status;
   late int _userId;
-
+  late NotificationSettings _settings;
   late int _reporteId;
-
+  String? token;
   List<String> paths = [];
   String get brigada_feedback => _brigada_feedback;
   String get referencia => _referencia;
@@ -37,6 +40,11 @@ class AppStateProvider extends ChangeNotifier {
   MapController get mapController => _mapController;
   set mapController(MapController value) {
     _mapController = value;
+  }
+
+  NotificationSettings get settings => _settings;
+  set settings(NotificationSettings value) {
+    _settings = value;
   }
 
   set brigada_feedback(String value) {
@@ -93,7 +101,26 @@ class AppStateProvider extends ChangeNotifier {
           return;
         }
       }
+      settings = await fcm.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
 
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        print('User granted permission');
+      } else if (settings.authorizationStatus ==
+          AuthorizationStatus.provisional) {
+        print('User granted provisional permission');
+      } else {
+        print('User declined or has not accepted permission');
+      }
+      token = await fcm.getToken();
+      HelperMethods.UpdateToken(Globals.user?.id ?? 0, token!);
       location.onLocationChanged.listen((LocationData currentLocation) {
         lat = currentLocation.latitude!;
         lng = currentLocation.longitude!;

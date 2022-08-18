@@ -46,6 +46,11 @@ class HelperMethods {
     }
   }
 
+  static UpdateToken(int user_id, String token) {
+    HttpSerrvice httpSerrvice = HttpSerrvice();
+    var response = httpSerrvice.updateToken(user_id, token);
+  }
+
   static Future<User> getProfile(id) {
     HttpSerrvice httpService = HttpSerrvice();
     return httpService.getprofile(id).then((value) {

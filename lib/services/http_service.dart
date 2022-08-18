@@ -58,6 +58,16 @@ class HttpSerrvice {
     return response;
   }
 
+  Future<http.Response> updateToken(int user_id, String token) async {
+    Uri uri = Uri.parse('${baseUrl}brigada/update-token');
+    var response = await http.post(uri, body: {
+      'id': user_id.toString(),
+      'token': token.trim(),
+    });
+
+    return response;
+  }
+
   Future<http.Response> isInCircunscripcion(
       int circunscripcion, double lat, double lon) async {
     Uri uri = Uri.parse(
