@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:bacheo_brigada/constants/colors.dart';
 import 'package:bacheo_brigada/helpers/helper_methods.dart';
 import 'package:bacheo_brigada/models/reporte.dart';
 import 'package:bacheo_brigada/providers/globals.dart';
@@ -11,9 +12,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:location/location.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/google.dart';
+import '../models/notification_info.dart';
 
 class AppStateProvider extends ChangeNotifier {
   double lat = 0.0;
@@ -29,20 +32,48 @@ class AppStateProvider extends ChangeNotifier {
   late int _userId;
   late NotificationSettings _settings;
   late int _reporteId;
+  List<Reporte> _reportes = [];
+  Future _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+    print("Handling a background message: ${message.messageId}");
+    getReportes();
+  }
+
+  late int _totalNotifications;
+  PushNotification? _notificationInfo;
+
+  List<Reporte> get reportes => _reportes;
+  set reportes(List<Reporte> value) {
+    _reportes = value;
+    notifyListeners();
+  }
+
+  set addTOReportes(Reporte value) {
+    _reportes.add(value);
+    notifyListeners();
+  }
+
   String? token;
   List<String> paths = [];
+
   String get brigada_feedback => _brigada_feedback;
+
   String get referencia => _referencia;
+
   String get status => _status;
+
   int get userId => _userId;
+
   // ignore: recursive_getters
   int get reporteId => _reporteId;
+
   MapController get mapController => _mapController;
+
   set mapController(MapController value) {
     _mapController = value;
   }
 
   NotificationSettings get settings => _settings;
+
   set settings(NotificationSettings value) {
     _settings = value;
   }
@@ -113,19 +144,66 @@ class AppStateProvider extends ChangeNotifier {
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
         print('User granted permission');
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+          // Parse the message received
+          PushNotification notification = PushNotification(
+            title: message.notification?.title,
+            body: message.notification?.body,
+          );
+
+          _notificationInfo = notification;
+          _totalNotifications++;
+        });
       } else if (settings.authorizationStatus ==
           AuthorizationStatus.provisional) {
         print('User granted provisional permission');
       } else {
         print('User declined or has not accepted permission');
       }
-      token = await fcm.getToken();
-      HelperMethods.UpdateToken(Globals.user?.id ?? 0, token!);
-      location.onLocationChanged.listen((LocationData currentLocation) {
-        lat = currentLocation.latitude!;
-        lng = currentLocation.longitude!;
-      });
-      //location.enableBackgroundMode();
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+          // ...
+          if (_notificationInfo != null) {
+            // For displaying the notification as an overlay
+            showSimpleNotification(
+              Text(_notificationInfo!.title!),
+              //leading: NotificationBadge(totalNotifications: _totalNotifications),
+              subtitle: Text(_notificationInfo!.body!),
+              background: brand_colors.ORANGE_MOPC,
+              duration: Duration(seconds: 2),
+            );
+            getReportes();
+          }
+        });
+        token = await fcm.getToken();
+        print(token);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString('token', token!);
+
+        // Add the following line
+        FirebaseMessaging.onBackgroundMessage(
+            _firebaseMessagingBackgroundHandler);
+
+        // For handling notification when the app is in background
+        // but not terminated
+        FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+          PushNotification notification = PushNotification(
+            title: message.notification?.title,
+            body: message.notification?.body,
+          );
+
+          _notificationInfo = notification;
+          _totalNotifications++;
+          notifyListeners();
+        });
+
+        location.onLocationChanged.listen((LocationData currentLocation) {
+          lat = currentLocation.latitude!;
+          lng = currentLocation.longitude!;
+        });
+        //location.enableBackgroundMode();
+      }
     }
   }
 
@@ -170,5 +248,13 @@ class AppStateProvider extends ChangeNotifier {
                 ],
               ));
     });
+  }
+
+  getReportes() {
+    if (Globals.user != null) {
+      HelperMethods.getUserReportes(Globals.user!.id ?? 0).then((value) => {
+            reportes = value,
+          });
+    }
   }
 }

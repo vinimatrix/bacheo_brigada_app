@@ -20,6 +20,8 @@ class HelperMethods {
     Map<String, dynamic> userMap = json.decode(userJson);
     User noPicUser = User.fromSharedPreferences(userMap);
     User userWithProfile = await HelperMethods.getProfile(noPicUser.id);
+    String? token = prefs.getString('token');
+    HelperMethods.UpdateToken(Globals.user?.id ?? 0, token!);
     return userWithProfile;
   }
 
@@ -46,9 +48,10 @@ class HelperMethods {
     }
   }
 
-  static UpdateToken(int user_id, String token) {
+  static UpdateToken(int user_id, String token) async {
     HttpSerrvice httpSerrvice = HttpSerrvice();
-    var response = httpSerrvice.updateToken(user_id, token);
+    var response = await httpSerrvice.updateToken(user_id, token);
+    print(response.body);
   }
 
   static Future<User> getProfile(id) {
@@ -100,6 +103,8 @@ class HelperMethods {
   static saveUser(user) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('user', jsonEncode(user));
+    String? token = prefs.getString('token');
+    HelperMethods.UpdateToken(Globals.user?.id ?? 0, token!);
   }
 
   static Future<User> updateProfile(int userid, String name, String oldName,

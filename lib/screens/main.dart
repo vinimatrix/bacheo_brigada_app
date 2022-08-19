@@ -36,9 +36,7 @@ class _MainState extends State<MainScreen> {
     AppStateProvider appProvider = Provider.of<AppStateProvider>(context);
     if (Globals.user != null) {
       HelperMethods.getUserReportes(Globals.user!.id ?? 0).then((value) => {
-            setState(() {
-              reportes = value;
-            })
+            appProvider.reportes = value,
           });
     }
     //print(user);
@@ -175,9 +173,9 @@ class _MainState extends State<MainScreen> {
             margin: EdgeInsets.only(top: 20),
             child: OrangeButton(
               onPressed: () async {
-                if (reportes.isNotEmpty) {
+                if (appProvider.reportes.isNotEmpty) {
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return MisReportes(reportes: reportes);
+                    return MisReportes(reportes: appProvider.reportes);
                   }));
                 } else {
                   showDialog(
@@ -205,7 +203,7 @@ class _MainState extends State<MainScreen> {
           ),
 
           ///Text("${appProvider.lat} ${appProvider.lng}"),
-          reportes.length == 0
+          appProvider.reportes.length == 0
               ? Column(children: [
                   Container(
                       margin: EdgeInsets.only(top: 10),
@@ -215,7 +213,7 @@ class _MainState extends State<MainScreen> {
               : Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Card(
-                    child: showChart(context, reportes),
+                    child: showChart(context, appProvider.reportes),
                   ),
                 )
         ]),
